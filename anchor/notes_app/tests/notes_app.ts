@@ -12,15 +12,11 @@ describe("notes_app", () => {
   const signer = provider.wallet.publicKey;
 
   it("Should create a note", async () => {
-    const noteId = (Math.random()*100000).toString();
+    const noteId = "this";
     const noteText = "hello world";
 
     const [notePda] = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from("note"),
-        signer.toBuffer(),
-        Buffer.from(noteId),
-      ],
+      [Buffer.from("note"), signer.toBuffer(), Buffer.from(noteId)],
       program.programId
     );
 
@@ -37,16 +33,30 @@ describe("notes_app", () => {
     expect(account.note).to.equal(noteText);
   });
 
+  it("Should update the old note", async () => {
+    const noteId = "this";
+    const noteText = "this is the new text";
+
+    const [notePda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("note"), signer.toBuffer(), Buffer.from(noteId)],
+      program.programId
+    );
+
+    await program.methods
+      .updateNote(noteId, noteText)
+      .accounts({ notePda, signer, systemProgram: SystemProgram.programId })
+      .rpc();
+
+    const account = await program.account.note.fetch(notePda);
+    expect(account.note).to.equal(noteText);
+  });
+
   it("Should fail for long notes", async () => {
     const noteId = "note-2";
     const longNote = "x".repeat(100);
 
     const [notePda] = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from("note"),
-        signer.toBuffer(),
-        Buffer.from(noteId),
-      ],
+      [Buffer.from("note"), signer.toBuffer(), Buffer.from(noteId)],
       program.programId
     );
 

@@ -11,6 +11,12 @@ pub mod notes_app {
         ctx.accounts.note_pda.note = note;
         Ok(())
     }
+
+    pub fn update_note(ctx:Context<UpdateNote>, note_id: String, note: String) -> Result<()> {
+        require!(note.len() <= 50, ErrorCode::NoteTooLong);
+        ctx.accounts.note_pda.note = note;
+        Ok(())
+    }
 }
 
 #[account]
@@ -26,6 +32,16 @@ pub struct CreateNote<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
     pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+#[instruction(note_id:String)]
+pub struct UpdateNote<'info> {
+    #[account(mut, seeds = [b"note", signer.key().as_ref(), note_id.as_bytes()], bump)]
+    pub note_pda: Account<'info, Note>,
+    #[account(mut)]
+    pub signer: Signer<'info>,
+    pub system_program: Program<'info, System>
 }
 
 #[error_code]
